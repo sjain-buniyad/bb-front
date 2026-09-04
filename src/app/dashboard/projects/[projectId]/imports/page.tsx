@@ -9,7 +9,12 @@ import TopHeader from "@/components/TopHeader";
 import Breadcrumb from "@/components/ui/Breadcrumb";
 import SearchInput from "@/components/ui/SearchInput";
 import Spinner from "@/components/ui/Spinner";
-import { DotsVerticalIcon, EyeIcon, PlusIcon, TrashIcon } from "@/components/ui/icons";
+import {
+  DotsVerticalIcon,
+  EyeIcon,
+  PlusIcon,
+  TrashIcon,
+} from "@/components/ui/icons";
 import {
   deleteImport,
   fetchBlocks,
@@ -210,7 +215,7 @@ export default function ImportsPage() {
                   New Import
                 </button>
                 <button className="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[#d4d4d8] text-zinc-600 font-medium text-sm hover:bg-[#e4e4e7] transition-colors">
-                  Merge Dwg
+                  Merge
                 </button>
                 <SearchInput
                   value={search}
@@ -261,7 +266,9 @@ export default function ImportsPage() {
                           imp={imp}
                           menuOpen={openMenuId === imp._id}
                           onToggleMenu={() =>
-                            setOpenMenuId(openMenuId === imp._id ? null : imp._id)
+                            setOpenMenuId(
+                              openMenuId === imp._id ? null : imp._id,
+                            )
                           }
                           onOpen={() =>
                             router.push(
@@ -390,7 +397,10 @@ function ImportRow({
         </span>
       </td>
       <td className="px-5 py-3.5 text-right">
-        <div className="relative inline-block" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="relative inline-block"
+          onClick={(e) => e.stopPropagation()}
+        >
           <button
             onClick={onToggleMenu}
             className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-[#e4e4e7] transition-colors"
