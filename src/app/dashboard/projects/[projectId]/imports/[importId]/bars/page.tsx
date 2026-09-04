@@ -13,8 +13,10 @@ import StructureTabs from "@/components/ui/StructureTabs";
 import { ChevronDownIcon, DownloadIcon } from "@/components/ui/icons";
 import {
   exportBarExcel,
+  getBarCropImageUrl,
   getImport,
   updateImport,
+  uploadBarCropImage,
   type ImportItem,
 } from "@/lib/api";
 import { useSidebarSync } from "@/hooks/useSidebarSync";
@@ -40,6 +42,10 @@ export default function BarsPage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
+
+  const [uploadingImageIndex, setUploadingImageIndex] = useState<number | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const [imageVersions, setImageVersions] = useState<Record<number, number>>({});
 
   useEffect(() => {
     if (importId) {
@@ -117,6 +123,31 @@ export default function BarsPage() {
       ),
     );
     setDirty(true);
+  };
+
+  const handleImageUpload = async (index: number, file: File) => {
+    if (!importId) return;
+    setUploadingImageIndex(index);
+    setImageError(null);
+    try {
+      const { cropImage } = await uploadBarCropImage(
+        importId as string,
+        index,
+        file,
+      );
+      // The upload endpoint already persists this on the import, so just
+      // sync local state without marking the page dirty.
+      setBarColumns((prev) =>
+        prev.map((item, i) =>
+          i === index ? { ...item, crop_image: cropImage } : item,
+        ),
+      );
+      setImageVersions((prev) => ({ ...prev, [index]: (prev[index] || 0) + 1 }));
+    } catch (err: any) {
+      setImageError(err?.message || "Failed to upload image");
+    } finally {
+      setUploadingImageIndex(null);
+    }
   };
 
   // ── Persistence ──
@@ -226,8 +257,10 @@ export default function BarsPage() {
               </div>
             </div>
 
-            {(saveError || exportError) && (
-              <p className="text-xs text-red-600">{saveError || exportError}</p>
+            {(saveError || exportError || imageError) && (
+              <p className="text-xs text-red-600">
+                {saveError || exportError || imageError}
+              </p>
             )}
 
             <StructureTabs active="Bar" />
@@ -300,6 +333,16 @@ export default function BarsPage() {
                         {isExpanded && (
                           <BarDetailForm
                             item={item}
+                            imageUrl={
+                              item.crop_image
+                                ? `${getBarCropImageUrl(importId as string, index)}${
+                                    imageVersions[index]
+                                      ? `?v=${imageVersions[index]}`
+                                      : ""
+                                  }`
+                                : undefined
+                            }
+                            imageUploading={uploadingImageIndex === index}
                             onFieldChange={(field, value) =>
                               updateBarField(index, field, value)
                             }
@@ -308,6 +351,9 @@ export default function BarsPage() {
                             }
                             onDescriptionChange={(value) =>
                               updateBarDescription(index, value)
+                            }
+                            onImageUpload={(file) =>
+                              handleImageUpload(index, file)
                             }
                           />
                         )}
@@ -330,9 +376,6 @@ export default function BarsPage() {
                 </div>
               )}
             </div>
-
-            {/* Plates table */}
-            {/*<PlateTable plates={plates} onChange={updatePlateField} />*/}
           </main>
         </div>
       </div>

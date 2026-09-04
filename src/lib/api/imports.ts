@@ -75,3 +75,23 @@ export async function exportBarExcel(
 
   return { blob: await res.blob(), filename: match?.[1] || "bar.xlsx" };
 }
+
+/** URL for a bar's extracted bending-shape crop image (usable directly as an <img> src). */
+export function getBarCropImageUrl(id: string, barIndex: number): string {
+  return `${API_URL}/import/${id}/bars/${barIndex}/crop-image`;
+}
+
+/** Replace a bar's bending-shape crop image with a user-uploaded one. */
+export async function uploadBarCropImage(
+  id: string,
+  barIndex: number,
+  file: File,
+): Promise<{ cropImage: string }> {
+  const formData = new FormData();
+  formData.append("file", file);
+  return uploadFormData<{ cropImage: string }>(
+    `/import/${id}/bars/${barIndex}/crop-image`,
+    formData,
+    "Failed to upload crop image",
+  );
+}
